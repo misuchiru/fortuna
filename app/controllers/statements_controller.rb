@@ -19,7 +19,10 @@ class StatementsController < ApplicationController
   def render_statement
     respond_to do |format|
       format.html { render template: @details[:template] }
-      format.pdf { render_statement_pdf }
+      format.pdf do
+        pdf = SalaryPdf.new(@details)
+        send_data pdf.render, filename: "Salary_#{@details[:name]}.pdf", type: "application/pdf"
+      end
     end
   end
 
