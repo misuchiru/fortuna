@@ -15,6 +15,7 @@ class StatementDetailsService
   def normal
     {
       name: payroll.employee.name,
+      id_number: payroll.employee.id_number,
       period: payment_period,
       filename: "#{payroll.employee.name} #{payment_period} 薪資明細",
       details: details_for_view,

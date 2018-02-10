@@ -1,50 +1,45 @@
 class SalaryPdf < Prawn::Document
+  include ActionView::Helpers::NumberHelper
   def initialize(details)
     super()
     @details = details
-    quotation_title
-    company_info
     line_items
-  end
-
-  def salary_title
-    font("app/assets/fonts/GenYoMinTW-Bold.ttf") do
-      text "<u>估   價   單</u>", size: 20, align: :center, :inline_format => true
-      move_down 30
-    end
-  end
-
-  def company_info
-    font("app/assets/fonts/GenYoMinTW-Medium.ttf", :size => 12) do
-      text "客戶名稱：#{@quotation.company.title}"
-      move_down 10
-      text "電        話：#{@quotation.company.telephone}"
-      move_down 10
-      text "地        址：#{@quotation.company.address}"
-    end
+    encrypt_document(:user_password => "#{@details[:id_number]}", :owner_password => "5xruby")
   end
 
   def line_items
     move_down 20
       data = [[
-        {:content => "編號", :align => :center},
-        {:content => "工程項目", :align => :center},
-        {:content => "數量", :align => :center},
-        {:content => "單價", :align => :center},
-        {:content => "金額", :align => :center}
-         ]] + line_item_rows + [[{:content => "總計金額", :colspan => 4}, {:content => "NT$ #{@quotation.total_price} 元", :align => :right}]]
+        {:content => "姓名", :align => :center},
+        {:content => "#{@details[:name]}", :align => :center},
+        {:content => "計算月份", :align => :center},
+        {:content => "#{@details[:period]}", :align => :center},
+         ]] + line_item_rows + [[
+           {:content => "小計", :align => :center},
+           {:content => "#{number_with_delimiter(@details[:gain])}", :align => :right},
+           {:content => "小計", :align => :center},
+           {:content => "#{number_with_delimiter(@details[:loss])}", :align => :right}
+         ]] + [[
+           {:content => "總計", :align => :center},
+           {:content => "#{number_with_delimiter(@details[:total])}", :align => :right, :colspan => 3}
+         ]]
       table(data,
         :header => true,
         :position => :center,
-        :column_widths => [40, 220, 55, 100, 120],
+        :column_widths => [100, 100, 100, 100],
         :row_colors => ['DDDDDD', 'FFFFFF'],
         :cell_style => { :font => "app/assets/fonts/GenYoMinTW-Medium.ttf"},
       )
   end
 
   def line_item_rows
-    @items.each_with_index.map do |item,index|
-      [{:content => "#{index + 1}", :align => :center}, item.title, {:content => "#{item.amount}", :align => :center}, {:content => "#{item.price} 元", :align => :right}, {:content => "#{item.price * item.amount} 元", :align => :right}]
+    @details[:details].map do |detail|
+      [
+        {:content => "#{detail[0].keys.first}", :align => :center},
+        {:content => "#{number_with_delimiter(detail[0].values.first)}", :align => :right},
+        {:content => "#{detail[1].keys.first}", :align => :center},
+        {:content => "#{number_with_delimiter(detail[1].values.first)}", :align => :right}
+      ]
     end
   end
 
